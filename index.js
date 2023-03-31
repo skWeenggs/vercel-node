@@ -27,6 +27,26 @@ app.get('/fetchpage1/:id', async(req,res)=>{
     }
 })
 
+app.get('/fetchuserdatafilter/:id', async(req,res)=>{
+    try{
+        console.log("id",req.params);
+        console.log("query",req.query);
+        const users=await notion.databases.query({
+            database_id:req.params.id,
+            filter: {
+                property: "Tags", // Replace "Tags" with the name of your multi-select property
+                multi_select: {
+                  "contains": req.query.q, // Replace "Urgent" with the name of the tag you want to filter on
+                },
+              },
+        });
+        res.status(200).json({users})
+        console.log(users);
+        // return users.json();
+    }catch(err){
+        console.log(err);
+    }
+})
 
 app.get('/fetchuserdata/:id', async(req,res)=>{
     try{
@@ -42,10 +62,8 @@ app.get('/fetchuserdata/:id', async(req,res)=>{
         console.log(err);
     }
 })
-// const Host='localhost';
-app.use('/a',(req,res)=>{
-    res.json({massage:"hiiii"})
-})
+
+
 app.use('/call',(req,res)=>{
     res.json({massage:"call massage"})
 })
