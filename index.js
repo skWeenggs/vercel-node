@@ -2,6 +2,9 @@ const express =require('express');
 const cors =require('cors');
 const {Client}=require('@notionhq/client')
 const dotenv=require('dotenv');
+const jwt=require('jsonwebtoken');
+
+const jwtKey="example"
 dotenv.config();
 
 const app=express();
