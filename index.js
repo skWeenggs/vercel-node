@@ -64,7 +64,7 @@ app.get('/fetchuserdata/:id', async(req,res)=>{
 })
 app.post('/login', async(req,res)=>{
     try{
-        console.log(req.body.email,req.body.password);
+        console.log(req.body.email);
         if (req.body.email) {
 
             const listUsersResponse = await notion.users.list()
