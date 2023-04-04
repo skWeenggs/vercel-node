@@ -65,6 +65,21 @@ app.get('/fetchuserdata/:id', async(req,res)=>{
         console.log(err);
     }
 })
+app.get('/fetchuserquery/:id', async(req,res)=>{
+    try{
+        console.log("id",req.params);
+        const users=await notion.databases.query({
+            database_id:req.params.id
+
+        });
+        res.status(200).json({users})
+        console.log(users);
+        // return users.json();
+    }catch(err){
+        console.log(err);
+    }
+})
+
 app.post('/loginuser', async(req,res)=>{
     try{
         console.log(req.body.email);
