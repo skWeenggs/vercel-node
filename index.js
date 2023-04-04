@@ -65,7 +65,7 @@ app.get('/fetchuserdata/:id', async(req,res)=>{
         console.log(err);
     }
 })
-app.post('/login', async(req,res)=>{
+app.post('/loginuser', async(req,res)=>{
     try{
         console.log(req.body.email);
         if (req.body.email) {
@@ -93,6 +93,33 @@ app.post('/login', async(req,res)=>{
     }
 })
 
+app.post('/loginadmin', async(req,res)=>{
+    try{
+        console.log(req.body.email,req.body.password);
+        if (req.body.email && req.body.password=== "admin@123") {
+
+            const listUsersResponse = await notion.users.list()
+            console.log(listUsersResponse)
+
+
+            if(listUsersResponse.results[0].person.email!==req.body.email){
+                return res.status(403).send({
+                    msg:"Invalid user"
+                })
+            }
+            jwt.sign({listUsersResponse},jwtKey,{expiresIn:"9h"},(err,token)=>{
+                if(err){
+                    res.send({result:"something went wrong,please try after sometime"})
+                }
+                res.send({listUsersResponse, auth:token})
+            })
+         }else{
+        return res.status(404).send({ result: "No User found" })
+    }
+    }catch(err){
+        console.log(err);
+    }
+})
 
 app.use('/call',(req,res)=>{
     res.json({massage:"call massage"})
