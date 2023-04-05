@@ -15,6 +15,27 @@ const port=5000;
 const notion= new Client({ auth:process.env.NOTION_KEY});
 
 
+function varifyToken(req,res,next){
+    let token=req.headers['authorization'];
+    if(token){
+        token=token.split(" ")[1];
+        console.log(token);
+        jwt.verify(token,jwtKey,(err,valid)=>{
+            if(err){
+
+                res.status(401).send({result:"Please add valid token "})
+            }
+            else{
+                next();
+            }
+        })
+    }else{
+            res.status(403).send({result:"Please add token with header"})
+    }
+}
+
+
+
 app.get('/fetchpage1/:id', async(req,res)=>{
     try{
         console.log("id",req.params.id);
@@ -135,6 +156,25 @@ app.post('/loginadmin', async(req,res)=>{
         console.log(err);
     }
 })
+
+
+app.delete('/deleterecord/:id',varifyToken, async(req,res)=>{
+    try
+    {
+        console.log("data",req.params.id);
+
+        const users=await notion.blocks.delete({
+            block_id:req.params.id,
+        });
+        console.log(users);
+        res.status(200).json({users})
+        
+    }catch(err){
+        console.log(err);
+        res.status(500).json({err})
+    }
+})
+
 
 app.use('/call',(req,res)=>{
     res.json({massage:"call massage"})
