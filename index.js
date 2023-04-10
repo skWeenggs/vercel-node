@@ -12,7 +12,15 @@ app.use(cors());
 app.use(express.json())
 const port=5000;
 
-const notion= new Client({ auth:process.env.NOTION_KEY});
+let token;
+
+const domainTokenMap = [
+    { domain: 'localhost', token: "secret_u9EJwvbbcnnjJ3DN2aXJsDA2YgfEk6lBxsyCWdK539O" },
+    { domain: 'domain123.netlify.app', token: "secret_jZwhw0TF233lAXipH5V1hIdOkt4tODKvDBJKG5pWHnW" },
+    { domain: 'domain12345.netlify.app', token: "secret_u9EJwvbbcnnjJ3DN2aXJsDA2YgfEk6lBxsyCWdK539O" },
+    // add more domain-token mappings as needed
+  ];
+// const notion= new Client({ auth:process.env.NOTION_KEY});
 
 
 function varifyToken(req,res,next){
@@ -51,10 +59,15 @@ app.get('/fetchpage1/:id', async(req,res)=>{
     }
 })
 
-app.get('/fetchuserdatafilter/:id', async(req,res)=>{
+app.get('/fetchuserdatafilter/:id/:domain', async(req,res)=>{
     try{
-        console.log("id",req.params);
-        console.log("query",req.query);
+        const mapping = domainTokenMap.find(mapping => mapping.domain === req.params.domain);
+        if (!mapping) {
+          throw new Error(`No matching domain found for ${req.params.domain}`);
+        }
+        const token = mapping.token;
+        const notion = new Client({ auth: token });
+
         const users=await notion.databases.query({
             database_id:req.params.id,
             filter: {
@@ -72,8 +85,15 @@ app.get('/fetchuserdatafilter/:id', async(req,res)=>{
     }
 })
 
-app.get('/fetchuserdata/:id', async(req,res)=>{
+app.get('/fetchuserdata/:id/:domain', async(req,res)=>{
     try{
+        const mapping = domainTokenMap.find(mapping => mapping.domain === req.params.domain);
+        if (!mapping) {
+          throw new Error(`No matching domain found for ${req.params.domain}`);
+        }
+        const token = mapping.token;
+        const notion = new Client({ auth: token });
+  
         console.log("id",req.params);
         const users=await notion.databases.query({
             database_id:req.params.id
