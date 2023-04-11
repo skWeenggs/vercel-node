@@ -21,7 +21,7 @@ const domainTokenMap = [
     { domain: 'domain121.netlify.app', token: "secret_u9EJwvbbcnnjJ3DN2aXJsDA2YgfEk6lBxsyCWdK539O" },
     // add more domain-token mappings as needed
   ];
-// const notion= new Client({ auth:process.env.NOTION_KEY});
+const notion= new Client({ auth:process.env.NOTION_KEY});
 
 
 function varifyToken(req,res,next){
