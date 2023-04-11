@@ -17,7 +17,7 @@ let token;
 const domainTokenMap = [
     { domain: 'localhost', token: "secret_u9EJwvbbcnnjJ3DN2aXJsDA2YgfEk6lBxsyCWdK539O" },
     { domain: 'domain123.netlify.app', token: "secret_jZwhw0TF233lAXipH5V1hIdOkt4tODKvDBJKG5pWHnW" },
-    { domain: 'domain12345.netlify.app', token: "secret_u9EJwvbbcnnjJ3DN2aXJsDA2YgfEk6lBxsyCWdK539O" },
+    { domain: 'domain12345.netlify.app', token: "secret_jZwhw0TF233lAXipH5V1hIdOkt4tODKvDBJKG5pWHnW" },
     // add more domain-token mappings as needed
   ];
 // const notion= new Client({ auth:process.env.NOTION_KEY});
@@ -86,6 +86,28 @@ app.get('/fetchuserdatafilter/:id/:domain', async(req,res)=>{
 })
 
 app.get('/fetchuserdata/:id/:domain', async(req,res)=>{
+    try{
+        const mapping = domainTokenMap.find(mapping => mapping.domain === req.params.domain);
+        if (!mapping) {
+          throw new Error(`No matching domain found for ${req.params.domain}`);
+        }
+        const token = mapping.token;
+        const notion = new Client({ auth: token });
+  
+        console.log("id",req.params);
+        const users=await notion.databases.query({
+            database_id:req.params.id
+
+        });
+        res.status(200).json({users})
+        console.log(users);
+        // return users.json();
+    }catch(err){
+        console.log(err);
+    }
+})
+
+app.get('/fetchuserfeature/:id/:domain', async(req,res)=>{
     try{
         const mapping = domainTokenMap.find(mapping => mapping.domain === req.params.domain);
         if (!mapping) {
