@@ -205,7 +205,7 @@ app.post('/loginadmin', async(req,res)=>{
 })
 
 app.post('/submitFormToNotion', async(req,res)=>{
-  
+    const notion= new Client({ auth:process.env.NOTION_KEY});
     const email = req.body.email;
     const domain_name = req.body.domain;
     const contentPageId = req.body.content_page_id;
