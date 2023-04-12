@@ -23,7 +23,7 @@ const domainTokenMap = [
     { domain: 'domain122.netlify.app', token: "secret_kb3A0fpt6vnABfDop4p16Zjv3g3ibAhMvrOuw7cH9pG" },
     // add more domain-token mappings as needed
   ];
-const notion= new Client({ auth:process.env.NOTION_KEY});
+// const notion= new Client({ auth:process.env.NOTION_KEY});
 
 
 function varifyToken(req,res,next){
@@ -133,6 +133,7 @@ app.get('/fetchuserfeature/:id/:domain', async(req,res)=>{
 })
 app.get('/fetchuserquery/:id', async(req,res)=>{
     try{
+        const notion= new Client({ auth:process.env.NOTION_KEY});
         console.log("id",req.params);
         const users=await notion.databases.query({
             database_id:req.params.id
@@ -176,6 +177,7 @@ app.post('/loginuser', async(req,res)=>{
 
 app.post('/loginadmin', async(req,res)=>{
     try{
+        const notion= new Client({ auth:process.env.NOTION_KEY});
         console.log(req.body.email,req.body.password);
         if (req.body.email && req.body.password === "admin@123") {
 
