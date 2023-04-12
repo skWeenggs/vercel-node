@@ -4,6 +4,7 @@ const {Client}=require('@notionhq/client')
 const dotenv=require('dotenv');
 const jwt=require('jsonwebtoken');
 
+
 const jwtKey="example"
 dotenv.config();
 
@@ -201,6 +202,84 @@ app.post('/loginadmin', async(req,res)=>{
     }
 })
 
+app.post('/submitFormToNotion', async(req,res)=>{
+  
+    const email = req.body.email;
+    const domain_name = req.body.domain;
+    const contentPageId = req.body.content_page_id;
+    const pagesPageId = req.body.pages_page_id;
+    const token_secretid = req.body.token_secretid;
+    const template= req.body.temp;
+    
+    try{
+       const response=await notion.pages.create({
+           parent:{database_id: process.env.NOTION_DATABASE_ID },
+           properties:{
+            Name: {
+                title: [
+                  {
+                    text: {
+                      "content": "Master Page"
+                    }
+                  }
+                ]
+              },
+            Email:{
+                type:'email',
+                email:email
+            }, 
+            Domain:{
+                rich_text:[{
+                    text:{
+                        content: domain_name
+                    }
+                }
+                ]
+            } ,
+            ContentPageId:{
+                rich_text:[{
+                    text:{
+                        content:contentPageId
+                    }
+                }
+                ]
+            } ,
+          
+            PagesPageId:{
+                rich_text:[{
+                    text:{
+                        content: pagesPageId
+                    }
+                }
+                ]
+            },
+            NotionToken:{
+                rich_text:[
+                    {
+                        text:{
+                            content: token_secretid
+                        }
+                    }
+                ]
+            },
+            Template:{
+                rich_text:[
+                    {
+                        text:{
+                            content: template
+                        }
+                    }
+                ]
+            }
+           }
+       })
+    
+       res.send(response);
+   }catch(err){
+        res.send(err);
+       console.log(err);
+    }
+})
 
 app.delete('/deleterecord/:id',varifyToken, async(req,res)=>{
     try
