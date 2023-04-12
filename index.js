@@ -177,7 +177,7 @@ app.post('/loginuser', async(req,res)=>{
 app.post('/loginadmin', async(req,res)=>{
     try{
         console.log(req.body.email,req.body.password);
-        if (req.body.email && req.body.password=== "admin@123") {
+        if (req.body.email && req.body.password === "admin@123") {
 
             const listUsersResponse = await notion.users.list()
             console.log(listUsersResponse)
