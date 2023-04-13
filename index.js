@@ -287,7 +287,7 @@ app.delete('/deleterecord/:id',varifyToken, async(req,res)=>{
     try
     {
         console.log("data",req.params.id);
-
+        const notion= new Client({ auth:process.env.NOTION_KEY});
         const users=await notion.blocks.delete({
             block_id:req.params.id,
         });
