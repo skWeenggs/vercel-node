@@ -51,6 +51,7 @@ function varifyToken(req,res,next){
 app.get('/fetchpage1/:id', async(req,res)=>{
     try{
         console.log("id",req.params.id);
+        const notion= new Client({ auth:process.env.NOTION_KEY});
         const users=await notion.databases.retrieve({
             database_id:req.params.id
 
@@ -284,18 +285,21 @@ app.post('/submitFormToNotion', async(req,res)=>{
     }
 })
 
-app.patch('/updateFormToNotion', async(req,res)=>{
+app.patch('/updateuser/:id', async(req,res)=>{
+    console.log(req.params.id);
     const notion= new Client({ auth:process.env.NOTION_KEY});
     const email = req.body.email;
     const domain_name = req.body.domain;
-    const contentPageId = req.body.content_page_id;
-    const pagesPageId = req.body.pages_page_id;
-    const token_secretid = req.body.token_secretid;
+    const contentPageId = req.body.contentPageId;
+    const pagesPageId = req.body.pagesPageId;
+    const token_secretid = req.body.notionToken;
     const template= req.body.temp;
-    
+    console.log(email,domain_name,contentPageId,pagesPageId,token_secretid,template);
+    const pageId=req.params.id;
     try{
-       const response=await notion.pages.create({
+       const response=await notion.pages.update({
            parent:{database_id: process.env.NOTION_DATABASE_ID },
+        //    page_id:pageId,
            properties:{
             Name: {
                 title: [
