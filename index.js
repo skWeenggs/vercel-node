@@ -284,7 +284,7 @@ app.post('/submitFormToNotion', async(req,res)=>{
     }
 })
 
-app.put('/updateFormToNotion', async(req,res)=>{
+app.patch('/updateFormToNotion', async(req,res)=>{
     const notion= new Client({ auth:process.env.NOTION_KEY});
     const email = req.body.email;
     const domain_name = req.body.domain;
