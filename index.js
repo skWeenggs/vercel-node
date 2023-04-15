@@ -3,7 +3,9 @@ const cors =require('cors');
 const {Client}=require('@notionhq/client')
 const dotenv=require('dotenv');
 const jwt=require('jsonwebtoken');
+const fetch = require('node-fetch');
 
+const axios = require("axios");
 
 const jwtKey="example"
 dotenv.config();
@@ -14,9 +16,9 @@ app.use(express.json())
 const port=5000;
 
 let token;
-
+const notion= new Client({ auth:process.env.NOTION_KEY});
 const domainTokenMap = [
-    { domain: 'localhost', token: "secret_u9EJwvbbcnnjJ3DN2aXJsDA2YgfEk6lBxsyCWdK539O" },
+    { domain: 'localhost', token: "secret_jZwhw0TF233lAXipH5V1hIdOkt4tODKvDBJKG5pWHnW" },
     { domain: 'domain123.netlify.app', token: "secret_jZwhw0TF233lAXipH5V1hIdOkt4tODKvDBJKG5pWHnW" },
     { domain: 'domain12345.netlify.app', token: "secret_jZwhw0TF233lAXipH5V1hIdOkt4tODKvDBJKG5pWHnW" },
     { domain: 'domain121.netlify.app', token: "secret_u9EJwvbbcnnjJ3DN2aXJsDA2YgfEk6lBxsyCWdK539O" },
@@ -25,6 +27,17 @@ const domainTokenMap = [
     // add more domain-token mappings as needed
   ];
 // const notion= new Client({ auth:process.env.NOTION_KEY});
+
+
+const headers = {
+    'Notion-Version': '2021-08-16',
+    'Authorization': process.env.NOTION_KEY,
+    'Content-Type': 'application/json'
+};
+
+const url = `https://notion-api.splitbee.io/v1/table/${process.env.NOTION_DATABASE_ID}`;
+
+
 
 
 function varifyToken(req,res,next){
@@ -48,17 +61,45 @@ function varifyToken(req,res,next){
 
 
 
-app.get('/fetchpage1/:id', async(req,res)=>{
+// app.get('/fetchpage1/:id', async(req,res)=>{
+ 
+//     try{
+//         console.log("id",req.params.id);
+       
+//         const users=await notion.databases.retrieve(
+//             {
+//             database_id:req.params.id
+
+//         }
+//         );
+//         res.status(200).json({users})
+//         console.log(users);
+//         return users.json();
+//     }catch(err){
+//         console.log(err);
+//     }
+// })
+
+app.get('/fetchpagelogo/:id/:domain', async(req,res)=>{
+ 
     try{
-        console.log("id",req.params.id);
-        const notion= new Client({ auth:process.env.NOTION_KEY});
-        const users=await notion.databases.retrieve({
+        console.log("id",req.params.id,req.params.domain);
+        const mapping = domainTokenMap.find(mapping => mapping.domain === req.params.domain);
+        if (!mapping) {
+          throw new Error(`No matching domain found for ${req.params.domain}`);
+        }
+        const token = mapping.token;
+        const notion = new Client({ auth: token });
+       
+        const users=await notion.databases.retrieve(
+            {
             database_id:req.params.id
 
-        });
+        }
+        );
         res.status(200).json({users})
         console.log(users);
-        // return users.json();
+        return users.json();
     }catch(err){
         console.log(err);
     }
@@ -384,10 +425,36 @@ app.delete('/deleterecord/:id',varifyToken, async(req,res)=>{
     }
 })
 
+app.get('/users', async (req, res) => {
+    try {
+      const response = await axios.post(`https://api.notion.com/v1/databases/${process.env.NOTION_DATABASE_ID}/query`, {}, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Notion-Version': '2021-08-16',
+          'Authorization': `Bearer ${process.env.NOTION_KEY}`
+        }
+      });
+      res.json(response.data);
+    } catch (error) {
+      console.error(error);
+      res.status(500).send('Server Error');
+    }
+  });
 
-app.use('/call',(req,res)=>{
-    res.json({massage:"call massage"})
-})
+
+// app.use('/users',(req,res)=>{
+//     fetch(`https://api.notion.com/v1/databases/${process.env.NOTION_DATABASE_ID}/query`, {
+//         method: "POST",
+//         headers: {
+//           "Content-Type": "application/json",
+//           "Notion-Version": "2021-08-16",
+//           "Authorization": `Bearer ${process.env.NOTION_KEY}`
+//         }
+//       })
+//       .then(res => res.json())
+//       .then(data => res.json(data))
+//       .catch(error => console.error(error));
+// })
 
 app.listen(port,()=>{
     console.log(`starting server on ${port}`);
