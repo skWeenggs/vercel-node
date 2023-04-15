@@ -253,6 +253,7 @@ app.post('/submitFormToNotion', async(req,res)=>{
     const domain_name = req.body.domain;
     const contentPageId = req.body.content_page_id;
     const pagesPageId = req.body.pages_page_id;
+    const authorPageId = req.body.author_page_id;
     const token_secretid = req.body.token_secretid;
     const template= req.body.temp;
     
@@ -294,6 +295,14 @@ app.post('/submitFormToNotion', async(req,res)=>{
                 rich_text:[{
                     text:{
                         content: pagesPageId
+                    }
+                }
+                ]
+            },
+            AuthorPageId:{
+                rich_text:[{
+                    text:{
+                        content: authorPageId
                     }
                 }
                 ]
