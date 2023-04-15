@@ -174,12 +174,12 @@ app.get('/fetchuserfeature/:id/:domain', async(req,res)=>{
         console.log(err);
     }
 })
-app.get('/fetchuserquery/:id', async(req,res)=>{
+app.get('/fetchuserquery', async(req,res)=>{
     try{
         const notion= new Client({ auth:process.env.NOTION_KEY});
         console.log("id",req.params);
         const users=await notion.databases.query({
-            database_id:req.params.id
+            database_id : process.env.NOTION_DATABASE_ID
 
         });
         res.status(200).json({users})
