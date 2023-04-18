@@ -341,14 +341,15 @@ app.patch('/updateuser/:id', async(req,res)=>{
     const domain_name = req.body.domain;
     const contentPageId = req.body.contentPageId;
     const pagesPageId = req.body.pagesPageId;
+    const authorPageId = req.body.authorPageId;
     const token_secretid = req.body.notionToken;
     const template= req.body.temp;
     console.log(email,domain_name,contentPageId,pagesPageId,token_secretid,template);
     const pageId=req.params.id;
     try{
        const response=await notion.pages.update({
-           parent:{database_id: process.env.NOTION_DATABASE_ID },
-        //    page_id:pageId,
+        //    parent:{database_id: process.env.NOTION_DATABASE_ID },
+           page_id:req.params.id,
            properties:{
             Name: {
                 title: [
@@ -384,6 +385,14 @@ app.patch('/updateuser/:id', async(req,res)=>{
                 rich_text:[{
                     text:{
                         content: pagesPageId
+                    }
+                }
+                ]
+            },
+            AuthorPageId:{
+                rich_text:[{
+                    text:{
+                        content: authorPageId
                     }
                 }
                 ]
