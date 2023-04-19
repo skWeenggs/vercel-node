@@ -23,7 +23,7 @@ app.use(express.json())
 const port=5000;
 
 let token;
-const notionread = new NotionAPI()
+// const notionread = new NotionAPI()
 
 // const notion= new Client({ auth:process.env.NOTION_KEY});
 const domainTokenMap = [
