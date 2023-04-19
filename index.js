@@ -1,11 +1,18 @@
-const express =require('express');
-const cors =require('cors');
-const {Client}=require('@notionhq/client')
-const dotenv=require('dotenv');
-const jwt=require('jsonwebtoken');
+// const express =require('express');
+// const cors =require('cors');
+// const {Client}=require('@notionhq/client')
+// const dotenv=require('dotenv');
+// const jwt=require('jsonwebtoken');
+// const axios = require("axios");
 
+import express from 'express';
+import cors from 'cors'
+import { Client } from '@notionhq/client';
+import dotenv from 'dotenv'
+import jwt from 'jsonwebtoken'
+import axios from 'axios';
+import { NotionAPI } from 'notion-client';
 
-const axios = require("axios");
 
 const jwtKey="example"
 dotenv.config();
@@ -16,7 +23,9 @@ app.use(express.json())
 const port=5000;
 
 let token;
-const notion= new Client({ auth:process.env.NOTION_KEY});
+const notionread = new NotionAPI()
+
+// const notion= new Client({ auth:process.env.NOTION_KEY});
 const domainTokenMap = [
     { domain: 'localhost', token: "secret_u9EJwvbbcnnjJ3DN2aXJsDA2YgfEk6lBxsyCWdK539O" },
     { domain: 'domain123.netlify.app', token: "secret_jZwhw0TF233lAXipH5V1hIdOkt4tODKvDBJKG5pWHnW" },
@@ -28,14 +37,6 @@ const domainTokenMap = [
   ];
 // const notion= new Client({ auth:process.env.NOTION_KEY});
 
-
-const headers = {
-    'Notion-Version': '2021-08-16',
-    'Authorization': process.env.NOTION_KEY,
-    'Content-Type': 'application/json'
-};
-
-const url = `https://notion-api.splitbee.io/v1/table/${process.env.NOTION_DATABASE_ID}`;
 
 
 
@@ -130,6 +131,25 @@ app.get('/fetchuserdatafilter/:id/:domain', async(req,res)=>{
         console.log(err);
     }
 })
+
+app.get('/fetchdata/:id', async (req, res) => {
+    try{
+       
+        const notion = new NotionAPI()
+        const recordMap = await notion.getPage(req.params.id)
+
+        // const users=await notion.pages.retrieve({
+        //     // database_id:req.params.id
+        //     page_id:req.params.id
+        // });
+        res.status(200).json({recordMap})
+   
+    }catch(err){
+        console.log(err);
+    }
+  });
+
+
 
 app.get('/fetchuserdata/:id/:domain', async(req,res)=>{
     try{
@@ -349,7 +369,6 @@ app.patch('/updateuser/:id', async(req,res)=>{
     const pageId=req.params.id;
     try{
        const response=await notion.pages.update({
-        //    parent:{database_id: process.env.NOTION_DATABASE_ID },
            page_id:req.params.id,
            properties:{
             Name: {
