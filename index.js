@@ -7,11 +7,11 @@
 
 import express from 'express';
 import cors from 'cors'
-import { Client } from '@notionhq/client';
+import  Client  from '@notionhq/client';
 import dotenv from 'dotenv'
 import jwt from 'jsonwebtoken'
 import axios from 'axios';
-import { NotionAPI } from 'notion-client';
+import  {NotionAPI}  from 'notion-client';
 
 
 const jwtKey="example"
