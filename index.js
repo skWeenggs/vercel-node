@@ -16,10 +16,6 @@ app.use(express.json())
 const port=5000;
 
 let token;
-<<<<<<< HEAD
-// const notionread = new NotionAPI()
-=======
->>>>>>> parent of 63e45d9 (add all module in ES format and add a custom api to render notion data.)
 const notion= new Client({ auth:process.env.NOTION_KEY});
 const domainTokenMap = [
     { domain: 'localhost', token: "secret_u9EJwvbbcnnjJ3DN2aXJsDA2YgfEk6lBxsyCWdK539O" },
