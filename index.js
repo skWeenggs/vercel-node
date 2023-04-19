@@ -1,18 +1,19 @@
-// const express =require('express');
-// const cors =require('cors');
-// const {Client}=require('@notionhq/client')
-// const dotenv=require('dotenv');
-// const jwt=require('jsonwebtoken');
-// const fetch = require('node-fetch');
-// const axios = require("axios");
+const express =require('express');
+const cors =require('cors');
+const {Client}=require('@notionhq/client')
+const dotenv=require('dotenv');
+const jwt=require('jsonwebtoken');
+const fetch = require('node-fetch');
+const axios = require("axios");
+// const NotionAPI= require("notion-client")
 
-import express from 'express';
-import cors from 'cors'
-import { Client } from '@notionhq/client';
-import dotenv from 'dotenv'
-import jwt from 'jsonwebtoken'
-import axios from 'axios';
-import { NotionAPI } from 'notion-client';
+// import express from 'express';
+// import cors from 'cors'
+// import { Client } from '@notionhq/client';
+// import dotenv from 'dotenv'
+// import jwt from 'jsonwebtoken'
+// import axios from 'axios';
+// import { NotionAPI } from 'notion-client';
 
 const jwtKey="example"
 dotenv.config();
@@ -24,7 +25,7 @@ const port=5000;
 
 let token;
 // const notionread = new NotionAPI()
-// const notion= new Client({ auth:process.env.NOTION_KEY});
+const notion= new Client({ auth:process.env.NOTION_KEY});
 const domainTokenMap = [
     { domain: 'localhost', token: "secret_u9EJwvbbcnnjJ3DN2aXJsDA2YgfEk6lBxsyCWdK539O" },
     { domain: 'domain123.netlify.app', token: "secret_jZwhw0TF233lAXipH5V1hIdOkt4tODKvDBJKG5pWHnW" },
