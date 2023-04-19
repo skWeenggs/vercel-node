@@ -1,18 +1,11 @@
-// const express =require('express');
-// const cors =require('cors');
-// const {Client}=require('@notionhq/client')
-// const dotenv=require('dotenv');
-// const jwt=require('jsonwebtoken');
-// const fetch = require('node-fetch');
-// const axios = require("axios");
+const express =require('express');
+const cors =require('cors');
+const {Client}=require('@notionhq/client')
+const dotenv=require('dotenv');
+const jwt=require('jsonwebtoken');
+const fetch = require('node-fetch');
 
-import express from 'express';
-import cors from 'cors'
-import { Client } from '@notionhq/client';
-import dotenv from 'dotenv'
-import jwt from 'jsonwebtoken'
-import axios from 'axios';
-import { NotionAPI } from 'notion-client';
+const axios = require("axios");
 
 const jwtKey="example"
 dotenv.config();
@@ -23,7 +16,10 @@ app.use(express.json())
 const port=5000;
 
 let token;
+<<<<<<< HEAD
 // const notionread = new NotionAPI()
+=======
+>>>>>>> parent of 63e45d9 (add all module in ES format and add a custom api to render notion data.)
 const notion= new Client({ auth:process.env.NOTION_KEY});
 const domainTokenMap = [
     { domain: 'localhost', token: "secret_u9EJwvbbcnnjJ3DN2aXJsDA2YgfEk6lBxsyCWdK539O" },
@@ -35,6 +31,15 @@ const domainTokenMap = [
     // add more domain-token mappings as needed
   ];
 // const notion= new Client({ auth:process.env.NOTION_KEY});
+
+
+const headers = {
+    'Notion-Version': '2021-08-16',
+    'Authorization': process.env.NOTION_KEY,
+    'Content-Type': 'application/json'
+};
+
+const url = `https://notion-api.splitbee.io/v1/table/${process.env.NOTION_DATABASE_ID}`;
 
 
 
@@ -458,23 +463,6 @@ app.get('/users', async (req, res) => {
     }
   });
 
-  app.get('/fetchdata/:id', async (req, res) => {
-    try{
-       
-        const notion = new NotionAPI()
-        const recordMap = await notion.getPage(req.params.id)
-
-        // const users=await notion.pages.retrieve({
-        //     // database_id:req.params.id
-        //     page_id:req.params.id
-        // });
-        res.status(200).json({recordMap})
-   
-    }catch(err){
-        console.log(err);
-    }
-  });
-
 
 // app.use('/users',(req,res)=>{
 //     fetch(`https://api.notion.com/v1/databases/${process.env.NOTION_DATABASE_ID}/query`, {
@@ -490,22 +478,6 @@ app.get('/users', async (req, res) => {
 //       .catch(error => console.error(error));
 // })
 
-
-app.get('/fetchpagenotion/:id', async(req,res)=>{
-    try{
-        console.log("id",req.params.id,req.params.domain);
-        const users=await notion.pages.retrieve({ page_id: req.params.id });
-        res.status(200).json({users})
-        console.log(users);
-        // return users.json();
-    }catch(err){
-        console.log(err);
-    }
-})
-
-
-
-
-app.listen(port,()=>{ 
+app.listen(port,()=>{
     console.log(`starting server on ${port}`);
 })
