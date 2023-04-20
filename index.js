@@ -169,7 +169,8 @@ app.get('/fetchuserdata/:id/:domain', async(req,res)=>{
         console.log(users);
         // return users.json();
     }catch(err){
-        console.log(err);
+        return res.status(404).send({ result: "No Data found" })
+        
     }
 })
 
@@ -492,6 +493,34 @@ app.get('/users', async (req, res) => {
 //       .then(data => res.json(data))
 //       .catch(error => console.error(error));
 // })
+
+app.get('/test/:id', async(req,res)=>{
+ 
+    try{
+        console.log("id",req.params.id);
+        const notion= new Client({ auth:'secret_kb3A0fpt6vnABfDop4p16Zjv3g3ibAhMvrOuw7cH9pG'});
+        const users=await notion.pages.retrieve(
+            {
+            page_id:req.params.id
+
+        }
+        );
+        res.status(200).json({users})
+        console.log(users);
+        return users.json();
+    }catch(err){
+        console.log(err);
+    }
+})
+
+app.get('/random.text',(req,res)=>{
+    res.send("rendom text")
+})
+
+app.get('/ab?cd',(req,res)=>{
+    res.send("rendom text")
+})
+
 
 app.listen(port,()=>{
     console.log(`starting server on ${port}`);
