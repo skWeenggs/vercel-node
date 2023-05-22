@@ -144,9 +144,9 @@ app.get('/fetchuserdatafilter/:id/:domain', async(req,res)=>{
         const users=await notion.databases.query({
             database_id:req.params.id,
             filter: {
-            property: "Tags", // Replace "Tags" with the name of your multi-select property
+            property: "Tags", 
             relation: {
-                contains: req.query.q, // Replace "Urgent" with the name of the tag you want to filter on                    },
+                contains: req.query.q, 
             },
         }});
         res.status(200).json({users})
@@ -220,6 +220,7 @@ app.get('/fetchuserfeature/:id/:domain', async(req,res)=>{
         console.log(err);
     }
 })
+
 app.get('/fetchuserquery', async(req,res)=>{
     try{
         const notion= new Client({ auth:process.env.NOTION_KEY});
@@ -538,7 +539,7 @@ app.get('/test/:id', async(req,res)=>{
     }
 })
 
-app.get('/random.text',(req,res)=>{
+app.get('/test',(req,res)=>{
     res.send("rendom text")
 })
 
