@@ -106,6 +106,32 @@ app.get('/fetchpagelogo/:id/:domain', async(req,res)=>{
     }
 })
 
+// app.get('/fetchuserdatafilter/:id/:domain', async(req,res)=>{
+//     try{
+//         const mapping = domainTokenMap.find(mapping => mapping.domain === req.params.domain);
+//         if (!mapping) {
+//           throw new Error(`No matching domain found for ${req.params.domain}`);
+//         }
+//         const token = mapping.token;
+//         const notion = new Client({ auth: token });
+
+//         const users=await notion.databases.query({
+//             database_id:req.params.id,
+//             filter: {
+//                 property: "Tags", // Replace "Tags" with the name of your multi-select property
+//                 multi_select: {
+//                   "contains": req.query.q, // Replace "Urgent" with the name of the tag you want to filter on
+//                 },
+//               },
+//         });
+//         res.status(200).json({users})
+//         console.log(users);
+//         // return users.json();
+//     }catch(err){
+//         console.log(err);
+//     }
+// })
+
 app.get('/fetchuserdatafilter/:id/:domain', async(req,res)=>{
     try{
         const mapping = domainTokenMap.find(mapping => mapping.domain === req.params.domain);
@@ -114,16 +140,15 @@ app.get('/fetchuserdatafilter/:id/:domain', async(req,res)=>{
         }
         const token = mapping.token;
         const notion = new Client({ auth: token });
-
+    
         const users=await notion.databases.query({
             database_id:req.params.id,
             filter: {
-                property: "Tags", // Replace "Tags" with the name of your multi-select property
-                multi_select: {
-                  "contains": req.query.q, // Replace "Urgent" with the name of the tag you want to filter on
-                },
-              },
-        });
+            property: "Tags", // Replace "Tags" with the name of your multi-select property
+            relation: {
+                contains: req.query.q, // Replace "Urgent" with the name of the tag you want to filter on                    },
+            },
+        }});
         res.status(200).json({users})
         console.log(users);
         // return users.json();
