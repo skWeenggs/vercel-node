@@ -12,8 +12,7 @@ import dotenv from 'dotenv'
 import jwt from 'jsonwebtoken'
 import axios from 'axios';
 import  {NotionAPI}  from 'notion-client';
-
-
+ 
 const jwtKey="example"
 dotenv.config();
 
@@ -162,7 +161,6 @@ app.get('/fetchdata/:id', async (req, res) => {
        
         const notion = new NotionAPI()
         const recordMap = await notion.getPage(req.params.id)
-
         // const users=await notion.pages.retrieve({
         //     // database_id:req.params.id
         //     page_id:req.params.id
@@ -173,6 +171,9 @@ app.get('/fetchdata/:id', async (req, res) => {
         console.log(err);
     }
   });
+
+
+
 
 
 
@@ -546,6 +547,202 @@ app.get('/test',(req,res)=>{
 app.get('/ab?cd',(req,res)=>{
     res.send("rendom text")
 })
+
+
+// const AuthorType = new GraphQLObjectType({
+//     name: 'Author',
+//     fields: {
+//       id: { type: GraphQLString },
+//       name: { type: GraphQLString },
+//     },
+//   });
+
+
+//   const PageType = new GraphQLObjectType({
+//     name: 'Page',
+//     fields: {
+//       id: { type: GraphQLString },
+//       title: { type: GraphQLString },
+//       author: {
+//         type: AuthorType,
+//         resolve: async (parent) => {
+//           const response = await notion.pages.retrieve({
+             
+//             page_id: parent.id,
+//             // Assuming the "Author" property is a relation property
+//             // Replace "author_property_name" with the actual property name
+//             // and "authors_database_id" with the actual ID of the "Authors" database
+//             // properties: Authors,
+//           });
+//           const authorPageId = response.properties.Authors.relation[0].id;
+//           const authorResponse = await notion.pages.retrieve({ page_id: authorPageId });
+//           return {
+//             id: authorPageId,
+//             name: authorResponse.properties.Name.title[0].text.content,
+//           };
+//         },
+//       },
+//     },
+//   });
+  
+//   const QueryType = new GraphQLObjectType({
+//     name: 'Query',
+//     fields: {
+//       pages: {
+//         type: new GraphQLList(PageType),
+//         resolve: async () => {
+//           const response = await notion.databases.query({
+//             database_id: '6887b78ae19b4434b130366a65498917',
+//           });
+//           return response.results.map((page) => ({
+//             id: page.id,
+//             title: page.properties.title[0].text.content,
+//           }));
+//         },
+//       },
+//     },
+//   });
+
+//   const schema = new GraphQLSchema({
+//     query: QueryType,
+//   });
+  
+//   app.get('/graphql', graphqlHTTP({
+//       schema: schema,
+//     graphiql: true,
+// }));
+
+app.get('/pages/:id/:domain', async (req, res) => {
+    try {
+        const mapping = domainTokenMap.find(mapping => mapping.domain === req.params.domain);
+        if (!mapping) {
+          throw new Error(`No matching domain found for ${req.params.domain}`);
+        }
+        const token = mapping.token;
+        const notion = new Client({ auth: token });
+      // Fetch pages from the Notion API
+      const response = await notion.databases.query({
+        database_id: req.params.id, // Replace with the ID of your Notion database
+      });
+    //   console.log("respp---",response);
+      // Extract relevant data from the response
+      const pages = response.results.map((page) => ({
+        id: page.id,
+        PageData: page,
+        AuthorsId: page.properties,
+        Tags: page.properties.Tags.relation
+      }));
+  
+      // Fetch author data for each page
+      const pagesWithAuthors = await Promise.all(
+        pages.map(async (page) => {
+                console.log(page);
+            const authorProperty = page.AuthorsId['Authors'];
+            const tagsProperty = page.Tags;
+
+          if (authorProperty && authorProperty.type === 'relation' && authorProperty.relation.length > 0) {
+            const authorPageId = authorProperty.relation[0].id;
+            const authorResponse = await notion.pages.retrieve({ page_id: authorPageId });
+          
+            const author = {
+              id: authorPageId,
+              icon:authorResponse.icon,
+              name: authorResponse.properties['Name'].title[0].text.content,
+            };
+  
+            const tags = await Promise.all(
+                tagsProperty.map(async (tag) => {
+                  const tagPageId = tag.id;
+                  const tagResponse = await notion.pages.retrieve({ page_id: tagPageId });
+                  const tagName = tagResponse.properties['Name'].title[0].text.content;
+        
+                  return { id: tagPageId, name: tagName };
+                })
+              );
+
+            return { ...page, author,tags };
+          } else {
+            return page;
+          }
+        })
+      );
+  
+      res.json(pagesWithAuthors);
+      console.log(pagesWithAuthors);
+    } catch (error) {
+      console.error('Error fetching data from Notion:', error);
+      res.status(500).json({ error: 'An error occurred while fetching data from Notion' });
+    }
+  });
+
+  app.get('/pagesfilter/:id/:domain', async (req, res) => {
+    try {
+        const mapping = domainTokenMap.find(mapping => mapping.domain === req.params.domain);
+        if (!mapping) {
+          throw new Error(`No matching domain found for ${req.params.domain}`);
+        }
+        const token = mapping.token;
+        const notion = new Client({ auth: token });
+      // Fetch pages from the Notion API
+      const response = await notion.databases.query({
+        database_id: req.params.id, 
+        filter:{
+            property:"Tags",
+            relation:{
+                contains:req.query.q
+            },
+        }    
+        });
+    //   console.log("respp---",response);
+      // Extract relevant data from the response
+      const pages = response.results.map((page) => ({
+        id: page.id,
+        PageData: page,
+        AuthorsId: page.properties,
+        Tags: page.properties.Tags.relation
+      }));
+  
+      // Fetch author data for each page
+      const pagesWithAuthors = await Promise.all(
+        pages.map(async (page) => {
+                console.log(page);
+            const authorProperty = page.AuthorsId['Authors'];
+            const tagsProperty = page.Tags;
+
+          if (authorProperty && authorProperty.type === 'relation' && authorProperty.relation.length > 0) {
+            const authorPageId = authorProperty.relation[0].id;
+            const authorResponse = await notion.pages.retrieve({ page_id: authorPageId });
+          
+            const author = {
+              id: authorPageId,
+              icon:authorResponse.icon,
+              name: authorResponse.properties['Name'].title[0].text.content,
+            };
+  
+            const tags = await Promise.all(
+                tagsProperty.map(async (tag) => {
+                  const tagPageId = tag.id;
+                  const tagResponse = await notion.pages.retrieve({ page_id: tagPageId });
+                  const tagName = tagResponse.properties['Name'].title[0].text.content;
+        
+                  return { id: tagPageId, name: tagName };
+                })
+              );
+
+            return { ...page, author,tags };
+          } else {
+            return page;
+          }
+        })
+      );
+  
+      res.json(pagesWithAuthors);
+      console.log(pagesWithAuthors);
+    } catch (error) {
+      console.error('Error fetching data from Notion:', error);
+      res.status(500).json({ error: 'An error occurred while fetching data from Notion' });
+    }
+  });
 
 
 app.listen(port,()=>{
