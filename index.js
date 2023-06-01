@@ -156,34 +156,7 @@ app.get('/fetchuserdatafilter/:id/:domain', async(req,res)=>{
     }
 })
 
-app.get('/fetchuserdatafilter1/:id/:domain/:auth', async(req,res)=>{
-    try{
-        console.log(req.params.auth);
-        const mapping = domainTokenMap.find(mapping => mapping.domain === req.params.domain);
-        if (!mapping) {
-          throw new Error(`No matching domain found for ${req.params.domain}`);
-        }
-        const token = mapping.token;
-        const notion = new Client({ auth: token });
-    
-        const users=await notion.databases.query({
-            database_id:req.params.id,
 
-            filter: {
-            and:[{
-                property: "Tags", 
-            relation: {
-                contains: req.query.q , 
-            }}
-        ]
-        }});
-        res.status(200).json({users})
-        console.log(users);
-        // return users.json();
-    }catch(err){
-        console.log(err);
-    }
-})
 
 app.get('/fetchdata/:id', async (req, res) => {
     try{
@@ -265,21 +238,21 @@ app.get('/fetchuserquery', async(req,res)=>{
     }
 })
 
-app.get('/fetchNotionApi/:id', async(req,res)=>{
-    try{
-        const notion= new Client({ auth:process.env.NOTION_KEY});
-        console.log("id",req.params);
-        const users=await notion.databases.query({
-            database_id : req.params.id
+// app.get('/fetchNotionApi/:id', async(req,res)=>{
+//     try{
+//         const notion= new Client({ auth:process.env.NOTION_KEY});
+//         console.log("id",req.params);
+//         const users=await notion.databases.query({
+//             database_id : req.params.id
 
-        });
-        res.status(200).json({users})
-        console.log(users);
-        // return users.json();
-    }catch(err){
-        console.log(err);
-    }
-})
+//         });
+//         res.status(200).json({users})
+//         console.log(users);
+//         // return users.json();
+//     }catch(err){
+//         console.log(err);
+//     }
+// })
 
 app.post('/loginuser', async(req,res)=>{
     try{
