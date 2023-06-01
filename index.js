@@ -9,7 +9,7 @@ import express from 'express';
 import cors from 'cors'
 import  {Client}  from '@notionhq/client';
 import dotenv from 'dotenv'
-import {jwt} from 'jsonwebtoken'
+import jwt from 'jsonwebtoken'
 import axios from 'axios';
 import  {NotionAPI}  from 'notion-client';
  
@@ -19,7 +19,7 @@ dotenv.config();
 const app=express();
 app.use(cors());
 app.use(express.json())
-// const port=5000;
+const port=5000;
 
 let token;
 // const notionread = new NotionAPI()
@@ -765,6 +765,6 @@ app.get('/pages/:id/:domain', async (req, res) => {
 
 
 
-// app.listen(port,()=>{
-//     console.log(`starting server on ${port}`);
-// })
+app.listen(port,()=>{
+    console.log(`starting server on ${port}`);
+})
