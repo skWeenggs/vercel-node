@@ -345,7 +345,6 @@ app.post('/submitFormToNotion', async(req,res)=>{
     const contentPageId = req.body.content_page_id;
     const pagesPageId = req.body.pages_page_id;
     const authorPageId = req.body.author_page_id;
-    const tagPageId = req.body.tag_page_id;
     const token_secretid = req.body.token_secretid;
     const template= req.body.temp;
     
@@ -357,8 +356,7 @@ app.post('/submitFormToNotion', async(req,res)=>{
                 title: [
                   {
                     text: {
-                        content:template
-                    //   "content": "Master Page"
+                      "content": "Master Page"
                     }
                   }
                 ]
@@ -396,14 +394,6 @@ app.post('/submitFormToNotion', async(req,res)=>{
                 rich_text:[{
                     text:{
                         content: authorPageId
-                    }
-                }
-                ]
-            },
-            TagPageId:{
-                rich_text:[{
-                    text:{
-                        content: tagPageId
                     }
                 }
                 ]
