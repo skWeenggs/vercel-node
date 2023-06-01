@@ -9,7 +9,7 @@ import express from 'express';
 import cors from 'cors'
 import  {Client}  from '@notionhq/client';
 import dotenv from 'dotenv'
-import jwt from 'jsonwebtoken'
+import {jwt} from 'jsonwebtoken'
 import axios from 'axios';
 import  {NotionAPI}  from 'notion-client';
  
@@ -29,7 +29,7 @@ const domainTokenMap = [
     { domain: 'localhost', token: "secret_u9EJwvbbcnnjJ3DN2aXJsDA2YgfEk6lBxsyCWdK539O" },
     { domain: 'domain123.netlify.app', token: "secret_jZwhw0TF233lAXipH5V1hIdOkt4tODKvDBJKG5pWHnW" },
     { domain: 'domain12345.netlify.app', token: "secret_jZwhw0TF233lAXipH5V1hIdOkt4tODKvDBJKG5pWHnW" },
-    { domain: 'domain121.netlify.app', token: "secret_u9EJwvbbcnnjJ3DN2aXJsDA2YgfEk6lBxsyCWdK539O" },
+    { domain: 'blog.gosetu.com', token: "secret_u9EJwvbbcnnjJ3DN2aXJsDA2YgfEk6lBxsyCWdK539O" },
     { domain: 'domain122.netlify.app', token: "secret_kb3A0fpt6vnABfDop4p16Zjv3g3ibAhMvrOuw7cH9pG" },
     { domain: 'jehotiw648.netlify.app', token: "secret_FQR32agEjWFSZi1zTLpbKZloKLPG0Kg0dHiADM3ln1k" },
     // add more domain-token mappings as needed
@@ -156,15 +156,42 @@ app.get('/fetchuserdatafilter/:id/:domain', async(req,res)=>{
     }
 })
 
+app.get('/fetchuserdatafilter1/:id/:domain/:auth', async(req,res)=>{
+    try{
+        console.log(req.params.auth);
+        const mapping = domainTokenMap.find(mapping => mapping.domain === req.params.domain);
+        if (!mapping) {
+          throw new Error(`No matching domain found for ${req.params.domain}`);
+        }
+        const token = mapping.token;
+        const notion = new Client({ auth: token });
+    
+        const users=await notion.databases.query({
+            database_id:req.params.id,
+
+            filter: {
+            and:[{
+                property: "Tags", 
+            relation: {
+                contains: req.query.q , 
+            }}
+        ]
+        }});
+        res.status(200).json({users})
+        console.log(users);
+        // return users.json();
+    }catch(err){
+        console.log(err);
+    }
+})
+
 app.get('/fetchdata/:id', async (req, res) => {
     try{
-       
+ 
         const notion = new NotionAPI()
+
         const recordMap = await notion.getPage(req.params.id)
-        // const users=await notion.pages.retrieve({
-        //     // database_id:req.params.id
-        //     page_id:req.params.id
-        // });
+
         res.status(200).json({recordMap})
    
     }catch(err){
@@ -228,6 +255,22 @@ app.get('/fetchuserquery', async(req,res)=>{
         console.log("id",req.params);
         const users=await notion.databases.query({
             database_id : process.env.NOTION_DATABASE_ID
+
+        });
+        res.status(200).json({users})
+        console.log(users);
+        // return users.json();
+    }catch(err){
+        console.log(err);
+    }
+})
+
+app.get('/fetchNotionApi/:id', async(req,res)=>{
+    try{
+        const notion= new Client({ auth:process.env.NOTION_KEY});
+        console.log("id",req.params);
+        const users=await notion.databases.query({
+            database_id : req.params.id
 
         });
         res.status(200).json({users})
@@ -302,6 +345,7 @@ app.post('/submitFormToNotion', async(req,res)=>{
     const contentPageId = req.body.content_page_id;
     const pagesPageId = req.body.pages_page_id;
     const authorPageId = req.body.author_page_id;
+    const tagPageId = req.body.tag_page_id;
     const token_secretid = req.body.token_secretid;
     const template= req.body.temp;
     
@@ -313,7 +357,8 @@ app.post('/submitFormToNotion', async(req,res)=>{
                 title: [
                   {
                     text: {
-                      "content": "Master Page"
+                        content:template
+                    //   "content": "Master Page"
                     }
                   }
                 ]
@@ -351,6 +396,14 @@ app.post('/submitFormToNotion', async(req,res)=>{
                 rich_text:[{
                     text:{
                         content: authorPageId
+                    }
+                }
+                ]
+            },
+            TagPageId:{
+                rich_text:[{
+                    text:{
+                        content: tagPageId
                     }
                 }
                 ]
@@ -693,6 +746,7 @@ app.get('/pages/:id/:domain', async (req, res) => {
             },
         }    
         });
+ 
     //   console.log("respp---",response);
       // Extract relevant data from the response
       const pages = response.results.map((page) => ({
@@ -743,6 +797,9 @@ app.get('/pages/:id/:domain', async (req, res) => {
       res.status(500).json({ error: 'An error occurred while fetching data from Notion' });
     }
   });
+
+
+
 
 
 app.listen(port,()=>{
