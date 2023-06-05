@@ -27,7 +27,7 @@ let token;
 // const notion= new Client({ auth:process.env.NOTION_KEY});
 const domainTokenMap = [
     { domain: 'localhost', token: "secret_u9EJwvbbcnnjJ3DN2aXJsDA2YgfEk6lBxsyCWdK539O" },
-    { domain: 'domain121.netlify.app', token: "secret_u9EJwvbbcnnjJ3DN2aXJsDA2YgfEk6lBxsyCWdK539O" },
+    { domain: 'domain121.netlify.app', token: "secret_Scr7jB0Sv6WaXfwdTpDV06G8Sq7gk9z61bjBxac6yQI" },
     { domain: 'domain123.netlify.app', token: "secret_jZwhw0TF233lAXipH5V1hIdOkt4tODKvDBJKG5pWHnW" },
     { domain: 'domain12345.netlify.app', token: "secret_jZwhw0TF233lAXipH5V1hIdOkt4tODKvDBJKG5pWHnW" },
     { domain: 'blog.gosetu.com', token: "secret_u9EJwvbbcnnjJ3DN2aXJsDA2YgfEk6lBxsyCWdK539O" },
@@ -644,6 +644,7 @@ app.get('/pages/:id/:domain', async (req, res) => {
         if (!mapping) {
           throw new Error(`No matching domain found for ${req.params.domain}`);
         }
+        console.log("mapp------",mapping);
         const token = mapping.token;
         const notion = new Client({ auth: token });
       // Fetch pages from the Notion API
