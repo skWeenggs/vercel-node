@@ -26,8 +26,8 @@ let token;
 
 // const notion= new Client({ auth:process.env.NOTION_KEY});
 const domainTokenMap = [
-    { domain: 'localhost', token: "secret_Scr7jB0Sv6WaXfwdTpDV06G8Sq7gk9z61bjBxac6yQI" },
-    { domain: 'domain121.netlify.app', token: "secret_Scr7jB0Sv6WaXfwdTpDV06G8Sq7gk9z61bjBxac6yQI" },
+    { domain: 'localhost', token: "secret_jCPvAqiz18oGS3wWeex26mpXAW4SGrrRtlmZ2mDMB07" },
+    { domain: 'domain121.netlify.app', token: "secret_jCPvAqiz18oGS3wWeex26mpXAW4SGrrRtlmZ2mDMB07" },
     { domain: 'domain123.netlify.app', token: "secret_jZwhw0TF233lAXipH5V1hIdOkt4tODKvDBJKG5pWHnW" },
     { domain: 'domain12345.netlify.app', token: "secret_jZwhw0TF233lAXipH5V1hIdOkt4tODKvDBJKG5pWHnW" },
     { domain: 'blog.gosetu.com', token: "secret_u9EJwvbbcnnjJ3DN2aXJsDA2YgfEk6lBxsyCWdK539O" },
