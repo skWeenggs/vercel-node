@@ -12,7 +12,9 @@ import dotenv from 'dotenv'
 import jwt from 'jsonwebtoken'
 import axios from 'axios';
 import  {NotionAPI}  from 'notion-client';
- 
+
+
+const userQuery =[]
 const jwtKey="example"
 dotenv.config();
 
@@ -20,6 +22,7 @@ const app=express();
 app.use(cors());
 app.use(express.json())
 const port=5000;
+let AdminList=[];
 
 let token;
 // const notionread = new NotionAPI()
@@ -38,7 +41,278 @@ const domainTokenMap = [
 // const notion= new Client({ auth:process.env.NOTION_KEY});
 
 
+////fetch admin side data
+async function fetchAdminData() {
+    try {
+      const notion = new Client({ auth: process.env.NOTION_KEY });
+      const userList = await notion.databases.query({ database_id: process.env.NOTION_DATABASE_ID });
+      return userList.results.map((list, ind) => ({
+        id:list.id,
+        email: list.properties.Email.email,
+        domainName: list.properties.Domain?.rich_text[0]?.plain_text,
+        templateName: list.properties.Template?.rich_text[0]?.plain_text,
+        contentPageId: list.properties.ContentPageId?.rich_text[0]?.plain_text,
+        pagesPageId: list.properties.PagesPageId?.rich_text[0]?.plain_text,
+        authorPageId: list.properties.AuthorPageId?.rich_text[0]?.plain_text,
+        tagPageId: list.properties.TagPageId?.rich_text[0]?.plain_text,
+        notionToken:list.properties.NotionToken?.rich_text[0]?.plain_text,
+      }));
+    } catch (error) {
+      console.log(error);
+      return [];
+    }
+  }
+  fetchAdminData()
+  .then((userQuery) => {
+    AdminList=userQuery;
+    // console.log('User Query:', AdminList);
+  })
+  .catch((error) => {
+    console.log('Error:', error);
+  });
+app.delete('/deleteUserRecord/:id/:email',async(req,res)=>{
+  try{
+    const mapping = AdminList && AdminList.find(mapping => mapping.email === req.params.email);
+    if (!mapping) {
+      throw new Error(`No matching domain found for ${req.params.email}`);
+    }
+    const token=mapping.notionToken;
+    const notion = new Client({ auth: token });
+    const users=await notion.blocks.delete({
+      block_id:req.params.id,
+  });
+  console.log(users);
+  res.status(200).json({users})
+  }catch(err){
+    console.log(err);
+    res.status(500).json({err})
+  }
+})
+  app.post('/AdminContentSave/:id/:email',async(req,res)=>{
+    const content=req.body.content;
+    const slug=req.body.slug;
+    // const ready=req.body.ready;
+    const date=req.body.date ;
+    const feature=req.body.feature;
+    const excerpt=req.body.excerpt;
+    try{
+ 
+        const mapping = AdminList && AdminList.find(mapping => mapping.email === req.params.email);
+        if (!mapping) {
+          throw new Error(`No matching domain found for ${req.params.email}`);
+        }
+        console.log("mapp------",mapping,req.params.id);
+        const token = mapping.notionToken;
+        const notion = new Client({ auth: token });
+        const response= await notion.pages.create({
+          parent:{database_id:req.params.id},
+          properties:{
+            Name:{
+              title:[
+                {
+                  text:{
+                    content: content
+                  }
+                }
+              ]
+            },
+            Slug:{
+              rich_text:[{
+                text:{
+                  content:slug
+                }
+              }]
+            },
+          
+            PublishDate: {
+              "type": "date",
+              "date": {
+                start: date
+              }
+            },
+            Featured: {
+              "type": "checkbox",
+              checkbox: feature
+            },
+            Excerpt:{
+              rich_text:[
+                {
+                  text:{
+                    content:excerpt
+                  }
+                }
+              ]
+            }
+          }
+        })
+        res.send(response)
+      }
+    catch(err){
+      console.log(err);
+    }
+  })
+  app.post('/Insert/:id/:email',async(req,res)=>{
+    const pagename=req.body.pagename;
+    const slug=req.body.slug;
+     const date=req.body.date ;
+     try{
+ 
+        const mapping = AdminList && AdminList.find(mapping => mapping.email === req.params.email);
+        if (!mapping) {
+          throw new Error(`No matching domain found for ${req.params.email}`);
+        }
+        console.log("mapp------",mapping,req.params.id);
+        const token = mapping.notionToken;
+        const notion = new Client({ auth: token });
+        const response= await notion.pages.create({
+          parent:{database_id:req.params.id},
+          properties:{
+            Name:{
+              title:[
+                {
+                  text:{
+                    content: pagename
+                  }
+                }
+              ]
+            },
+            Slug:{
+              rich_text:[{
+                text:{
+                  content:slug
+                }
+              }]
+            },
+          
+            PublishDate: {
+              "type": "date",
+              "date": {
+                start: date
+              }
+            },
+          
+          }
+        })
+        res.send(response)
+      }
+    catch(err){
+      console.log(err);
+    }
+  })
 
+  app.patch('/Update/:id/:email',async(req,res)=>{
+    const pagename=req.body.pagename;
+    const slug=req.body.slug;
+     const newdate=req.body.publishDate;
+     try{
+ 
+        const mapping = AdminList && AdminList.find(mapping => mapping.email === req.params.email);
+        if (!mapping) {
+          throw new Error(`No matching domain found for ${req.params.email}`);
+        }
+        console.log("mapp------",mapping,req.params.id,newdate);
+        const token = mapping.notionToken;
+        const notion = new Client({ auth: token });
+        const response= await notion.pages.update({
+          page_id:req.params.id,
+          properties:{
+            Name:{
+              title:[
+                {
+                  text:{
+                    content: pagename
+                  }
+                }
+              ]
+            },
+            Slug:{
+              rich_text:[{
+                text:{
+                  content:slug
+                }
+              }]
+            },
+            PublishDate: {
+              type: "date",
+              date: {
+                start : newdate
+              }
+            }
+          }
+        })
+        res.send(response)
+      }
+    catch(err){
+      console.log(err);
+    }
+  })
+
+
+  app.get('/AdminPages/:id/:email', async (req, res) => {
+    try {
+        const mapping = AdminList && AdminList.find(mapping => mapping.email === req.params.email);
+        if (!mapping) {
+          throw new Error(`No matching domain found for ${req.params.email}`);
+        }
+        // console.log("mapp------",mapping);
+        const token = mapping.notionToken;
+        const notion = new Client({ auth: token });
+      // Fetch pages from the Notion API
+      const result = await notion.databases.query({
+        database_id: req.params.id, // Replace with the ID of your Notion database
+      })
+       res.status(200).json({result})
+        // return result.json();
+    //   console.log("respp---",response);
+      // Extract relevant data from the response
+    //   const pages = response.results.map((page) => ({
+    //     id: page.id,
+    //     PageData: page,
+    //     AuthorsId: page.properties,
+    //     Tags: page.properties.Tags.relation
+    //   }));
+  
+    // //   Fetch author data for each page
+    //   const pagesWithAuthors = await Promise.all(
+    //     pages.map(async (page) => {
+    //             console.log(page);
+    //         const authorProperty = page.AuthorsId['Authors'];
+    //         const tagsProperty = page.Tags;
+
+    //       if (authorProperty && authorProperty.type === 'relation' && authorProperty.relation.length > 0) {
+    //         const authorPageId = authorProperty.relation[0].id;
+    //         const authorResponse = await notion.pages.retrieve({ page_id: authorPageId });
+          
+    //         const author = {
+    //           id: authorPageId,
+    //           icon:authorResponse.icon,
+    //           name: authorResponse.properties['Name'].title[0].text.content,
+    //         };
+  
+    //         const tags = await Promise.all(
+    //             tagsProperty.map(async (tag) => {
+    //               const tagPageId = tag.id;
+    //               const tagResponse = await notion.pages.retrieve({ page_id: tagPageId });
+    //               const tagName = tagResponse.properties['Name'].title[0].text.content;
+        
+    //               return { id: tagPageId, name: tagName };
+    //             })
+    //           );
+
+    //         return { ...page, author,tags };
+    //       } else {
+    //         return page;
+    //       }
+    //     })
+    //   );
+  
+    //   res.json(pagesWithAuthors);
+    //   console.log(pagesWithAuthors);
+    } catch (error) {
+      console.error('Error fetching data from Notion:', error);
+      res.status(500).json({ error: 'An error occurred while fetching data from Notion' });
+    }
+  });
 
 
 function varifyToken(req,res,next){
@@ -409,16 +683,41 @@ app.post('/submitFormToNotion', async(req,res)=>{
     }
 })
 
+app.patch('/updatedomain/:id',async(req,res)=>{
+  const notion= new Client({ auth:process.env.NOTION_KEY});
+  const domain_name = req?.body?.domain;
+  try{
+    const response=await notion.pages.update({
+      page_id:req.params.id,
+      properties:{
+        Domain:{
+          rich_text:[{
+              text:{
+                  content: domain_name
+              }
+          }
+          ]
+      }
+      }
+    })
+    res.status(200).json({response})
+    // res.send(response)
+  }catch(err){
+    res.send(err)
+  }
+})
+
 app.patch('/updateuser/:id', async(req,res)=>{
-    console.log(req.params.id);
+
+    // console.log(req.params.id,req.body.domain);
     const notion= new Client({ auth:process.env.NOTION_KEY});
-    const email = req.body.email;
-    const domain_name = req.body.domain;
-    const contentPageId = req.body.contentPageId;
-    const pagesPageId = req.body.pagesPageId;
-    const authorPageId = req.body.authorPageId;
-    const token_secretid = req.body.notionToken;
-    const template= req.body.temp;
+    const email = req?.body?.email;
+    const domain_name = req?.body?.domain;
+    const contentPageId = req?.body?.contentPageId;
+    const pagesPageId = req?.body?.pagesPageId;
+    const authorPageId = req?.body?.authorPageId;
+    const token_secretid = req?.body?.notionToken;
+    const template= req?.body?.temp;
     console.log(email,domain_name,contentPageId,pagesPageId,token_secretid,template);
     const pageId=req.params.id;
     try{
