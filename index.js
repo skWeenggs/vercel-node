@@ -65,12 +65,13 @@ async function fetchAdminData() {
   }
   fetchAdminData()
   .then((userQuery) => {
-    AdminList=userQuery;
+    AdminList = userQuery;
     // console.log('User Query:', AdminList);
   })
   .catch((error) => {
     console.log('Error:', error);
   });
+
 app.delete('/deleteUserRecord/:id/:email',async(req,res)=>{
   try{
     const mapping = AdminList && AdminList.find(mapping => mapping.email === req.params.email);
@@ -251,6 +252,7 @@ app.delete('/deleteUserRecord/:id/:email',async(req,res)=>{
 
   app.get('/AdminPages/:id/:email', async (req, res) => {
     try {
+        fetchAdminData()
         const mapping = AdminList && AdminList.find(mapping => mapping.email === req.params.email);
         if (!mapping) {
           throw new Error(`No matching domain found for ${req.params.email}`);
@@ -263,52 +265,7 @@ app.delete('/deleteUserRecord/:id/:email',async(req,res)=>{
         database_id: req.params.id, // Replace with the ID of your Notion database
       })
        res.status(200).json({result})
-        // return result.json();
-    //   console.log("respp---",response);
-      // Extract relevant data from the response
-    //   const pages = response.results.map((page) => ({
-    //     id: page.id,
-    //     PageData: page,
-    //     AuthorsId: page.properties,
-    //     Tags: page.properties.Tags.relation
-    //   }));
-  
-    // //   Fetch author data for each page
-    //   const pagesWithAuthors = await Promise.all(
-    //     pages.map(async (page) => {
-    //             console.log(page);
-    //         const authorProperty = page.AuthorsId['Authors'];
-    //         const tagsProperty = page.Tags;
-
-    //       if (authorProperty && authorProperty.type === 'relation' && authorProperty.relation.length > 0) {
-    //         const authorPageId = authorProperty.relation[0].id;
-    //         const authorResponse = await notion.pages.retrieve({ page_id: authorPageId });
-          
-    //         const author = {
-    //           id: authorPageId,
-    //           icon:authorResponse.icon,
-    //           name: authorResponse.properties['Name'].title[0].text.content,
-    //         };
-  
-    //         const tags = await Promise.all(
-    //             tagsProperty.map(async (tag) => {
-    //               const tagPageId = tag.id;
-    //               const tagResponse = await notion.pages.retrieve({ page_id: tagPageId });
-    //               const tagName = tagResponse.properties['Name'].title[0].text.content;
-        
-    //               return { id: tagPageId, name: tagName };
-    //             })
-    //           );
-
-    //         return { ...page, author,tags };
-    //       } else {
-    //         return page;
-    //       }
-    //     })
-    //   );
-  
-    //   res.json(pagesWithAuthors);
-    //   console.log(pagesWithAuthors);
+    
     } catch (error) {
       console.error('Error fetching data from Notion:', error);
       res.status(500).json({ error: 'An error occurred while fetching data from Notion' });
@@ -825,7 +782,58 @@ app.get('/users', async (req, res) => {
           'Authorization': `Bearer ${process.env.NOTION_KEY}`
         }
       });
+      
       res.json(response.data);
+    } catch (error) {
+      console.error(error);
+      res.status(500).send('Server Error');
+    }
+  });
+
+  app.get('/usersdata/:domain', async (req, res) => {
+    try {
+      const notionQuery= async ()=>{
+      const response = await axios.post(`https://api.notion.com/v1/databases/${process.env.NOTION_DATABASE_ID}/query`, {}, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Notion-Version': '2021-08-16',
+          'Authorization': `Bearer ${process.env.NOTION_KEY}`
+        }
+      });
+      return response.data;
+    }
+      const usersData = await notionQuery();
+ 
+      const domainMap = usersData.results.filter(page => {
+        console.log(page);
+        // const temp = page.properties.Template?.rich_text[0]?.plain_text;     
+        // return temp === req.params.domain
+        // const email = page.properties.Email.email
+        // return email === req.params.domain
+        const url = page.properties.Domain?.rich_text[0]?.plain_text;
+        return url === req.params.domain
+      })
+      // console.log("domainmap",domainMap[0].properties.FooterId);
+      if (domainMap.length > 0) {
+        const footerPageId = domainMap[0].properties.FooterId.rich_text[0].plain_text; // Assuming you have a property called 'FooterId' with rich text data on each page object
+        console.log(footerPageId);
+        // Make an API call to fetch the footer page data using the retrieved 'footerPageId'
+        const footerResponse = await axios.post(`https://api.notion.com/v1/databases/${footerPageId}/query`, {}, {
+          headers: {
+            'Content-Type': 'application/json',
+            'Notion-Version': '2021-08-16',
+            'Authorization': `Bearer ${process.env.NOTION_KEY}`
+          }
+        });
+        // return footerResponse.data;
+        console.log("fsd",footerResponse.data);
+        const footerData = footerResponse.data;
+        res.json({usersData,footerData})
+      }else{
+
+        res.json(usersData);
+      }
+
     } catch (error) {
       console.error(error);
       res.status(500).send('Server Error');
@@ -987,6 +995,14 @@ app.get('/pages/:id/:domain', async (req, res) => {
                 })
               );
 
+              // let footerContent = null;
+              // if (footerProperty && footerProperty.type === 'relation' && footerProperty.relation.length > 0) {
+              //   const footerPageId = footerProperty.relation[0].id;
+              //   const footerResponse = await notion.pages.retrieve({ page_id: footerPageId });
+              //   // Assuming the footer content is stored in a property named 'Content'
+              //   footerContent = footerResponse.properties['Content'].rich_text[0].text.content;
+              // }
+            
             return { ...page, author,tags };
           } else {
             return page;
