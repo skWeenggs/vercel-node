@@ -805,7 +805,7 @@ app.get('/users', async (req, res) => {
       const usersData = await notionQuery();
  
       const domainMap = usersData.results.filter(page => {
-        console.log(page);
+        // console.log(page);
         // const temp = page.properties.Template?.rich_text[0]?.plain_text;     
         // return temp === req.params.domain
         // const email = page.properties.Email.email
@@ -813,21 +813,24 @@ app.get('/users', async (req, res) => {
         const url = page.properties.Domain?.rich_text[0]?.plain_text;
         return url === req.params.domain
       })
-      // console.log("domainmap",domainMap[0].properties.FooterId);
+      const notion = new Client({ auth: process.env.NOTION_KEY });
+      console.log("domainmap",domainMap[0].properties.FooterId.relation[0].id);
       if (domainMap.length > 0) {
-        const footerPageId = domainMap[0].properties.FooterId.rich_text[0].plain_text; // Assuming you have a property called 'FooterId' with rich text data on each page object
-        console.log(footerPageId);
+        // const footerPageId = domainMap[0].properties.FooterId.rich_text[0].plain_text; // Assuming you have a property called 'FooterId' with rich text data on each page object
+        const footerPageId = domainMap[0].properties.FooterId.relation[0].id; // Assuming you have a property called 'FooterId' with rich text data on each page object
+        // console.log("id",footerPageId);
         // Make an API call to fetch the footer page data using the retrieved 'footerPageId'
-        const footerResponse = await axios.post(`https://api.notion.com/v1/databases/${footerPageId}/query`, {}, {
-          headers: {
-            'Content-Type': 'application/json',
-            'Notion-Version': '2021-08-16',
-            'Authorization': `Bearer ${process.env.NOTION_KEY}`
-          }
-        });
+        // const footerResponse = await axios.post(`https://api.notion.com/v1/pages/${footerPageId}/query`, {}, {
+        //   headers: {
+        //     'Content-Type': 'application/json',
+        //     'Notion-Version': '2021-08-16',
+        //     'Authorization': `Bearer ${process.env.NOTION_KEY}`
+        //   }
+        // });
+        const footerResponse=await notion.pages.retrieve({page_id:footerPageId})
         // return footerResponse.data;
-        console.log("fsd",footerResponse.data);
-        const footerData = footerResponse.data;
+        console.log("fsd",footerResponse);
+        const footerData = footerResponse;
         res.json({usersData,footerData})
       }else{
 
