@@ -72,8 +72,29 @@ async function fetchAdminData() {
     console.log('Error:', error);
   });
 
+  app.delete('/deleteTemplateRecord/:id/:email',async(req,res)=>{
+    try{
+      fetchAdminData()
+      const mapping = AdminList && AdminList.find(mapping => mapping.email === req.params.email);
+      if (!mapping) {
+        throw new Error(`No matching domain found for ${req.params.email}`);
+      }
+      // const token=mapping.notionToken;
+      const notion = new Client({ auth: process.env.NOTION_KEY });
+      const users=await notion.blocks.delete({
+        block_id:req.params.id,
+    });
+    console.log(users);
+    res.status(200).json({users})
+    }catch(err){
+      console.log(err);
+      res.status(500).json({err})
+    }
+  })
+
 app.delete('/deleteUserRecord/:id/:email',async(req,res)=>{
   try{
+    fetchAdminData()
     const mapping = AdminList && AdminList.find(mapping => mapping.email === req.params.email);
     if (!mapping) {
       throw new Error(`No matching domain found for ${req.params.email}`);
@@ -814,29 +835,32 @@ app.get('/users', async (req, res) => {
         return url === req.params.domain
       })
       const notion = new Client({ auth: process.env.NOTION_KEY });
-      console.log("domainmap",domainMap[0].properties.FooterId.relation[0].id);
+      // console.log("domainmap",domainMap[0]?.properties?.FooterId?.relation[0]?.id);
       if (domainMap.length > 0) {
-        // const footerPageId = domainMap[0].properties.FooterId.rich_text[0].plain_text; // Assuming you have a property called 'FooterId' with rich text data on each page object
-        const footerPageId = domainMap[0].properties.FooterId.relation[0].id; // Assuming you have a property called 'FooterId' with rich text data on each page object
-        // console.log("id",footerPageId);
-        // Make an API call to fetch the footer page data using the retrieved 'footerPageId'
-        // const footerResponse = await axios.post(`https://api.notion.com/v1/pages/${footerPageId}/query`, {}, {
-        //   headers: {
-        //     'Content-Type': 'application/json',
-        //     'Notion-Version': '2021-08-16',
-        //     'Authorization': `Bearer ${process.env.NOTION_KEY}`
-        //   }
-        // });
+  
+        const footerPageId = domainMap[0]?.properties?.FooterId?.relation[0]?.id;
+        const footerNewsId= domainMap[0]?.properties?.FooterNewsId?.relation[0]?.id;
+
+        if (!footerPageId && !footerNewsId) {
+          throw new Error("Missing footer IDs and newLatterId");
+        }else if(!footerPageId){
+          const footerNewsResponse=await notion.pages.retrieve({page_id:footerNewsId})
+          const footerNewsData = footerNewsResponse;
+          res.json({usersData,footerData:{},footerNewsData})
+          
+        }else{
         const footerResponse=await notion.pages.retrieve({page_id:footerPageId})
-        // return footerResponse.data;
-        console.log("fsd",footerResponse);
         const footerData = footerResponse;
-        res.json({usersData,footerData})
-      }else{
 
-        res.json(usersData);
+        const footerNewsResponse=await notion.pages.retrieve({page_id:footerNewsId})
+        const footerNewsData = footerNewsResponse;
+
+        res.json({usersData,footerData,footerNewsData})
+        }
       }
-
+      else {
+        res.json({ usersData, footerData: {}, footerNewsData: {} });
+      }
     } catch (error) {
       console.error(error);
       res.status(500).send('Server Error');
@@ -1092,6 +1116,56 @@ app.get('/pages/:id/:domain', async (req, res) => {
   });
 
 
+  app.post('/FooterNewsLatterInsert/:id',async(req,res)=>{
+    try{
+      const newslettername=req.body.NewsLetterName;
+      const newslettertext=req.body.NewsLetterText;
+      const copywrite=req.body.CopyWrite;
+
+      
+      fetchAdminData()
+        // const mapping = AdminList && AdminList.find(mapping => mapping.email === req.params.email);
+        // if (!mapping) {
+        //   throw new Error(`No matching domain found for ${req.params.email}`);
+        // }
+        // console.log("mapp------",mapping,req.params.id);
+        // const token = mapping.notionToken;
+        const notion = new Client({ auth: process.env.NOTION_KEY });
+        const response= await notion.pages.create({
+          parent:{database_id:req.params.id},
+          properties:{
+            NewsLetterName:{
+              title:[
+                {
+                  text:{
+                    content: "fsdf"
+                  }
+                }
+              ]
+            },
+            NewsLetterText:{
+              rich_text:[{
+                text:{
+                  content:"dsd"
+                }
+              }]
+            },
+            CopyWrite:{
+              rich_text:[{
+                text:{
+                  content:"dsd"
+                }
+              }]
+            }
+          
+          }
+        })
+        res.send(response)
+      }
+    catch(err){
+      console.log(err);
+    }
+  })
 
 
 
