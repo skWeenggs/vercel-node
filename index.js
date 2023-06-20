@@ -34,8 +34,8 @@ const domainTokenMap = [
     { domain: 'domain121.netlify.app', token: "secret_jCPvAqiz18oGS3wWeex26mpXAW4SGrrRtlmZ2mDMB07" },
     { domain: 'domain123.netlify.app', token: "secret_jZwhw0TF233lAXipH5V1hIdOkt4tODKvDBJKG5pWHnW" },
     { domain: 'domain12345.netlify.app', token: "secret_jZwhw0TF233lAXipH5V1hIdOkt4tODKvDBJKG5pWHnW" },
-    { domain: 'blog.gosetu.com', token: "secret_u9EJwvbbcnnjJ3DN2aXJsDA2YgfEk6lBxsyCWdK539O" },
-    { domain: 'blogsetu.netlify.app', token: "secret_14k7F8RLzdHbJC0FsmjlJjeehBxwnfTgTtBthQjBeEf" },
+    // { domain: 'blog.gosetu.com', token: "secret_u9EJwvbbcnnjJ3DN2aXJsDA2YgfEk6lBxsyCWdK539O" },
+    { domain: 'blog.gosetu.com', token: "secret_14k7F8RLzdHbJC0FsmjlJjeehBxwnfTgTtBthQjBeEf" },
     { domain: 'domain122.netlify.app', token: "secret_kb3A0fpt6vnABfDop4p16Zjv3g3ibAhMvrOuw7cH9pG" },
     { domain: 'jehotiw648.netlify.app', token: "secret_FQR32agEjWFSZi1zTLpbKZloKLPG0Kg0dHiADM3ln1k" },
     // add more domain-token mappings as needed
