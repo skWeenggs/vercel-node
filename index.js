@@ -29,7 +29,7 @@ let token;
 
 // const notion= new Client({ auth:process.env.NOTION_KEY});
 const domainTokenMap = [
-    { domain: 'localhost', token: "secret_14k7F8RLzdHbJC0FsmjlJjeehBxwnfTgTtBthQjBeEf" },
+    { domain: 'localhost', token: "secret_jCPvAqiz18oGS3wWeex26mpXAW4SGrrRtlmZ2mDMB07" },
     { domain: 'chatg.in', token: "secret_jCPvAqiz18oGS3wWeex26mpXAW4SGrrRtlmZ2mDMB07" },
     { domain: 'domain121.netlify.app', token: "secret_jCPvAqiz18oGS3wWeex26mpXAW4SGrrRtlmZ2mDMB07" },
     { domain: 'domain123.netlify.app', token: "secret_jZwhw0TF233lAXipH5V1hIdOkt4tODKvDBJKG5pWHnW" },
