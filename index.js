@@ -827,46 +827,92 @@ app.get('/users', async (req, res) => {
       const usersData = await notionQuery();
  
       const domainMap = usersData.results.filter(page => {
-        // console.log(page);
-        // const temp = page.properties.Template?.rich_text[0]?.plain_text;     
-        // return temp === req.params.domain
-        // const email = page.properties.Email.email
-        // return email === req.params.domain
         const url = page.properties.Domain?.rich_text[0]?.plain_text;
-        return url === req.params.domain
-      })
+        return url === req.params.domain;
+      });
+      
       const notion = new Client({ auth: process.env.NOTION_KEY });
-      // console.log("domainmap",domainMap[0]?.properties?.FooterId?.relation[0]?.id);
+      
       if (domainMap.length > 0) {
-  
-        const footerPageId = domainMap[0]?.properties?.FooterId?.relation[0]?.id;
-        const footerNewsId= domainMap[0]?.properties?.FooterNewsId?.relation[0]?.id;
-
-        if (!footerPageId && !footerNewsId) {
-          throw new Error("Missing footer IDs and newLatterId");
-        }else if(!footerPageId){
-          const footerNewsResponse=await notion.pages.retrieve({page_id:footerNewsId})
-          const footerNewsData = footerNewsResponse;
-          res.json({usersData,footerData:{},footerNewsData})
-          
-        }else{
-        const footerResponse=await notion.pages.retrieve({page_id:footerPageId})
-        const footerData = footerResponse;
-
-        const footerNewsResponse=await notion.pages.retrieve({page_id:footerNewsId})
-        const footerNewsData = footerNewsResponse;
-
-        res.json({usersData,footerData,footerNewsData})
+        const footerPageIds = domainMap[0]?.properties?.FooterId?.relation.map(relation => relation.id);
+        const footerNewsIds = domainMap[0]?.properties?.FooterNewsId?.relation.map(relation => relation.id);
+      
+        if ((!footerPageIds || footerPageIds.length === 0) && (!footerNewsIds || footerNewsIds.length === 0)) {
+          throw new Error("Missing footer IDs and newsletter ID.");
+        } else {
+          const footerDataPromises = footerPageIds ? footerPageIds.map(id => notion.pages.retrieve({ page_id: id })) : [];
+          const footerNewsDataPromises = footerNewsIds ? footerNewsIds.map(id => notion.pages.retrieve({ page_id: id })) : [];
+      
+          const [footerDataResponses, footerNewsDataResponses] = await Promise.all([
+            Promise.all(footerDataPromises),
+            Promise.all(footerNewsDataPromises)
+          ]);
+       
+          res.json({ usersData,footerDataResponses,footerNewsDataResponses });
         }
-      }
-      else {
-        res.json({ usersData, footerData: {}, footerNewsData: {} });
+      } else {
+        res.json({ usersData, footerDataResponses: [], footerNewsDataResponses: [] });
       }
     } catch (error) {
       console.error(error);
       res.status(500).send('Server Error');
     }
   });
+  // app.get('/usersdata/:domain', async (req, res) => {
+  //   try {
+  //     const notionQuery= async ()=>{
+  //     const response = await axios.post(`https://api.notion.com/v1/databases/${process.env.NOTION_DATABASE_ID}/query`, {}, {
+  //       headers: {
+  //         'Content-Type': 'application/json',
+  //         'Notion-Version': '2021-08-16',
+  //         'Authorization': `Bearer ${process.env.NOTION_KEY}`
+  //       }
+  //     });
+  //     return response.data;
+  //   }
+  //     const usersData = await notionQuery();
+ 
+  //     const domainMap = usersData.results.filter(page => {
+  //       // console.log(page);
+  //       // const temp = page.properties.Template?.rich_text[0]?.plain_text;     
+  //       // return temp === req.params.domain
+  //       // const email = page.properties.Email.email
+  //       // return email === req.params.domain
+  //       const url = page.properties.Domain?.rich_text[0]?.plain_text;
+  //       return url === req.params.domain
+  //     })
+  //     const notion = new Client({ auth: process.env.NOTION_KEY });
+  //     console.log("domainmap",domainMap[0]?.properties?.FooterId);
+  //     if (domainMap.length > 0) {
+  
+  //       const footerPageId = domainMap[0]?.properties?.FooterId?.relation[0]?.id;
+  //       const footerNewsId= domainMap[0]?.properties?.FooterNewsId?.relation[0]?.id;
+
+  //       if (!footerPageId && !footerNewsId) {
+  //         throw new Error("Missing footer IDs and newLatterId");
+  //       }else if(!footerPageId){
+  //         const footerNewsResponse=await notion.pages.retrieve({page_id:footerNewsId})
+  //         const footerNewsData = footerNewsResponse;
+  //         res.json({usersData,footerData:{},footerNewsData})
+          
+  //       }else{
+  //       const footerResponse=await notion.pages.retrieve({page_id:footerPageId})
+  //       const footerData = footerResponse;
+
+  //       const footerNewsResponse=await notion.pages.retrieve({page_id:footerNewsId})
+  //       const footerNewsData = footerNewsResponse;
+
+  //       res.json({usersData,footerData,footerNewsData})
+  //       }
+  //     }
+  //     else {
+  //       res.json({ usersData, footerData: {}, footerNewsData: {} });
+  //     }
+  //   } catch (error) {
+  //     console.error(error);
+  //     res.status(500).send('Server Error');
+  //   }
+  // });
 
 
 // app.use('/users',(req,res)=>{
@@ -1123,15 +1169,75 @@ app.get('/pages/:id/:domain', async (req, res) => {
       const newslettertext=req.body.NewsLetterText;
       const copywrite=req.body.CopyWrite;
 
+      console.log("mapp------",req.params.id);
       
       fetchAdminData()
         // const mapping = AdminList && AdminList.find(mapping => mapping.email === req.params.email);
         // if (!mapping) {
         //   throw new Error(`No matching domain found for ${req.params.email}`);
         // }
-        // console.log("mapp------",mapping,req.params.id);
         // const token = mapping.notionToken;
         const notion = new Client({ auth: process.env.NOTION_KEY });
+        const responseresult = await notion.databases.query({
+          database_id: req.params.id,
+        
+          page_size: 1,
+        });
+        const records = responseresult.results;
+        console.log(records);
+        if(records.length > 0 ){
+          const lastRecordId=records[0].id;
+          console.log(lastRecordId);
+          const updateResponse=await notion.pages.update({
+            page_id:lastRecordId,
+            properties:{
+              NewsLetterName: {
+                title: [
+                  {
+                    text: {
+                      content: newslettername,
+                    },
+                  },
+                ],
+              },
+              NewsLetterText: {
+                rich_text: [
+                  {
+                    text: {
+                      content: newslettertext,
+                    },
+                  },
+                ],
+              },
+              CopyWrite: {
+                rich_text: [
+                  {
+                    text: {
+                      content: copywrite,
+                    },
+                  },
+                ],
+              },
+            },
+          });
+        //   const newPageId = updateResponse.id;
+        // const masterTableId = process.env.NOTION_DATABASE_ID;
+        // const relationResponse=await notion.pages.update({
+        //   page_id:masterTableId,
+        //   properties:{
+        //     FooterNewsId:{
+        //       relation:[
+        //         {
+        //           id:newPageId
+        //         }
+        //       ]
+        //     }
+        //   }
+        // })
+    
+          res.send({massage:"Record Updated successfully" ,response:{updateResponse}});
+            
+        }else{
         const response= await notion.pages.create({
           parent:{database_id:req.params.id},
           properties:{
@@ -1139,7 +1245,7 @@ app.get('/pages/:id/:domain', async (req, res) => {
               title:[
                 {
                   text:{
-                    content: "fsdf"
+                    content: newslettername,
                   }
                 }
               ]
@@ -1147,27 +1253,146 @@ app.get('/pages/:id/:domain', async (req, res) => {
             NewsLetterText:{
               rich_text:[{
                 text:{
-                  content:"dsd"
+                  content:newslettertext,
                 }
               }]
             },
             CopyWrite:{
               rich_text:[{
                 text:{
-                  content:"dsd"
+                  content:copywrite,
                 }
               }]
             }
           
           }
         })
-        res.send(response)
+      
+        const newPageId = response.id;
+        const masterTableId = process.env.NOTION_DATABASE_ID;
+        const relationResponse=await notion.pages.update({
+          page_id:masterTableId,
+          properties:{
+            FooterNewsId:{
+              relation:[
+                {
+                  id:newPageId
+                }
+              ]
+            }
+          }
+        })
+        
+        res.send({massage:"Record created successfully",response:{response,relationResponse}})
       }
+    }
     catch(err){
       console.log(err);
     }
   })
 
+  app.post('/FooterPageLink/:id',async(req,res)=>{
+    try{
+       const footerName=req.body.title;
+      const footerDesc=req.body.description;
+      const footerLinkType=req.body.linktype;
+      const footerLink=req.body.option
+      
+      const notion = new Client({ auth: process.env.NOTION_KEY });
+      const response = await notion.pages.create({
+        parent: {
+          database_id: req.params.id,
+        },
+        properties: {
+          FooterName: {
+            title: [
+              {
+                text: {
+                  content: footerName,
+                },
+              },
+            ],
+          },
+          FooterDesc: {
+            rich_text: [
+              {
+                text: {
+                  content: footerDesc,
+                },
+              },
+            ],
+          },
+          FooterLinkType: {
+            select: {
+              name: footerLinkType,
+            },
+          },
+          FooterLink: {
+            url: footerLink,
+          },
+          // MasterCustomerPage:{
+          //   relation:[
+          //     {
+
+          //       id:req.params.id,
+          //     }
+          //   ]
+          // }
+        },
+      });
+
+     
+      res.send({massage:"record inserted succesfully",response:response})
+    } catch(e){
+      console.log(e);
+    }
+  })
+
+  app.patch('/FooterPageLinkUpdate/:id',async(req,res)=>{
+    const footerName=req.body.title;
+   const footerDesc=req.body.description;
+   const footerLinkType=req.body.linktype;
+   const footerLink=req.body.option
+   console.log(footerName,footerDesc,footerLinkType,footerLink,req.params.id);
+   const notion = new Client({ auth: process.env.NOTION_KEY });
+    try{
+      
+      const response = await notion.pages.update({
+        page_id:req.params.id,
+        properties: {
+          FooterName: {
+            title: [
+              {
+                text: {
+                  content: footerName,
+                },
+              },
+            ],
+          },
+          FooterDesc: {
+            rich_text: [
+              {
+                text: {
+                  content: footerDesc,
+                },
+              },
+            ],
+          },
+          FooterLinkType: {
+            select: {
+              name: footerLinkType,
+            },
+          },
+          FooterLink: {
+            url: footerLink,
+          },
+        },
+      });
+      res.send({massage:"record updated succesfully",response:response})
+    } catch(e){
+      console.log(e);
+    }
+  })
 
 
 app.listen(port,()=>{
