@@ -22,7 +22,7 @@ const app=express();
 app.use(cors());
 app.use(express.json())
 const port=5000;
-let AdminList=[];
+var AdminList=[];
 
 let token;
 // const notionread = new NotionAPI()
@@ -48,7 +48,7 @@ async function fetchAdminData() {
     try {
       const notion = new Client({ auth: process.env.NOTION_KEY });
       const userList = await notion.databases.query({ database_id: process.env.NOTION_DATABASE_ID });
-      return userList.results.map((list, ind) => ({
+      return userList?.results?.map((list, ind) => ({
         id:list.id,
         email: list.properties.Email.email,
         domainName: list.properties.Domain?.rich_text[0]?.plain_text,
