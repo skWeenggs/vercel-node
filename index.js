@@ -836,22 +836,25 @@ app.get('/users', async (req, res) => {
       if (domainMap.length > 0) {
         const footerPageIds = domainMap[0]?.properties?.FooterId?.relation.map(relation => relation.id);
         const footerNewsIds = domainMap[0]?.properties?.FooterNewsId?.relation.map(relation => relation.id);
-      
-        if ((!footerPageIds || footerPageIds.length === 0) && (!footerNewsIds || footerNewsIds.length === 0)) {
+        const navlinkid=domainMap[0]?.properties?.NavigationId?.relation.map(relation => relation.id);
+        
+        if ((!footerPageIds || footerPageIds.length === 0) && (!footerNewsIds || footerNewsIds.length === 0) && (!navlinkid)) {
           throw new Error("Missing footer IDs and newsletter ID.");
         } else {
           const footerDataPromises = footerPageIds ? footerPageIds.map(id => notion.pages.retrieve({ page_id: id })) : [];
           const footerNewsDataPromises = footerNewsIds ? footerNewsIds.map(id => notion.pages.retrieve({ page_id: id })) : [];
+          const navigationDataPromises = navlinkid ? navlinkid.map(id => notion.pages.retrieve({ page_id: id })) : [];
       
-          const [footerDataResponses, footerNewsDataResponses] = await Promise.all([
+          const [footerDataResponses, footerNewsDataResponses,navigationDataResponse] = await Promise.all([
             Promise.all(footerDataPromises),
-            Promise.all(footerNewsDataPromises)
+            Promise.all(footerNewsDataPromises),
+            Promise.all(navigationDataPromises) 
           ]);
        
-          res.json({ usersData,footerDataResponses,footerNewsDataResponses });
+          res.json({ usersData,footerDataResponses,footerNewsDataResponses,navigationDataResponse });
         }
       } else {
-        res.json({ usersData, footerDataResponses: [], footerNewsDataResponses: [] });
+        res.json({ usersData, footerDataResponses: [], footerNewsDataResponses: [],navigationDataResponse:[] });
       }
     } catch (error) {
       console.error(error);
