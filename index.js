@@ -12,16 +12,13 @@ import dotenv from 'dotenv'
 import jwt from 'jsonwebtoken'
 import axios from 'axios';
 import  {NotionAPI}  from 'notion-client';
-import fs from 'fs-extra'
-import multer from 'multer';
+
 
 const userQuery =[]
 const jwtKey="example"
 dotenv.config();
 
 const app=express();
-const upload=multer({dest:'uploads/'});
-
 app.use(cors());
 app.use(express.json())
 const port=5000;
@@ -839,24 +836,22 @@ app.get('/users', async (req, res) => {
       if (domainMap.length > 0) {
         const footerPageIds = domainMap[0]?.properties?.FooterId?.relation.map(relation => relation.id);
         const footerNewsIds = domainMap[0]?.properties?.FooterNewsId?.relation.map(relation => relation.id);
-        const navigationIds=domainMap[0]?.properties?.NavigationId?.relation.map(relation=>relation.id);
-        
-        if ((!footerPageIds ) && (!footerNewsIds || footerNewsIds.length === 0) && !navigationIds) {
+      
+        if ((!footerPageIds || footerPageIds.length === 0) && (!footerNewsIds || footerNewsIds.length === 0)) {
           throw new Error("Missing footer IDs and newsletter ID.");
         } else {
           const footerDataPromises = footerPageIds ? footerPageIds.map(id => notion.pages.retrieve({ page_id: id })) : [];
           const footerNewsDataPromises = footerNewsIds ? footerNewsIds.map(id => notion.pages.retrieve({ page_id: id })) : [];
-          const navigationDataPromises=navigationIds? navigationIds.map(id=> notion.pages.retrieve({page_id:id})):[];
-          const [footerDataResponses, footerNewsDataResponses,navigationDataResponse] = await Promise.all([
+      
+          const [footerDataResponses, footerNewsDataResponses] = await Promise.all([
             Promise.all(footerDataPromises),
-            Promise.all(footerNewsDataPromises),
-            Promise.all(navigationDataPromises)
+            Promise.all(footerNewsDataPromises)
           ]);
        
-          res.json({ usersData,footerDataResponses,footerNewsDataResponses,navigationDataResponse });
+          res.json({ usersData,footerDataResponses,footerNewsDataResponses });
         }
       } else {
-        res.json({ usersData, footerDataResponses: [], footerNewsDataResponses: [],navigationDataResponse:[] });
+        res.json({ usersData, footerDataResponses: [], footerNewsDataResponses: [] });
       }
     } catch (error) {
       console.error(error);
@@ -1167,138 +1162,6 @@ app.get('/pages/:id/:domain', async (req, res) => {
     }
   });
 
-app.post('/navPageLink/:id', upload.any(), async(req,res)=>{
-
-  try{
-    const { image } = req.body;
-    const {name,link} =req.body;
-    // const imageBuffer = Buffer.from(image, 'base64');
-        // Save the image buffer to a temporary file
-      // const tempImagePath = './temp_image.jpg';
-      // fs.writeFileSync(tempImagePath, imageBuffer);
-       // Read the temporary image file as binary data
-      //  const imageData = fs.readFileSync(tempImagePath);
-      //  const encodedLogoBase64 = imageData.toString('base64');
-  
-      //  console.log(image,name,link);
-
-
-      const validNavLink = link.startsWith('http://') || link.startsWith('https://')  ? link  : `http://${link}`;
-  
-    console.log(validNavLink);
-
-       const notion = new Client({ auth: process.env.NOTION_KEY });
-       const responseresult = await notion.databases.query({
-         database_id: req.params.id,
-       
-         page_size: 1,
-       });
-       const records = responseresult.results;
-       console.log(records);
-
-       if(records.length > 0){
-        
-        const lastRecordId=records[0].id;
-        console.log(lastRecordId);
-        const updateResponse=await notion.pages.update({
-          page_id:lastRecordId,
-          properties:{
-            LogoName: {
-              title: [
-                {
-                  text: {
-                    content: name,
-                  },
-                },
-              ],
-            },
-            NavLink: {
-                  url:validNavLink,
-            },
-            Logo:{
-              files: [
-                {
-                  name: 'LogoImage',
-                  type: 'external',
-                  external: {
-                    url: image,
-                  },
-                },
-              ],
-            }
-          
-          },
-        });
-     
-      //   const newPageId = updateResponse.id;
-      // const masterTableId = process.env.NOTION_DATABASE_ID;
-      // const relationResponse=await notion.pages.update({
-      //   page_id:masterTableId,
-      //   properties:{
-      //     FooterNewsId:{
-      //       relation:[
-      //         {
-      //           id:newPageId
-      //         }
-      //       ]
-      //     }
-      //   }
-      // })
-  
-        res.send({massage:"Record Updated successfully" ,response:{updateResponse}});
-       }else{
-        const response= await notion.pages.create({
-          parent:{database_id:req.params.id},
-          properties:{
-            LogoName: {
-              title: [
-                {
-                  text: {
-                    content: name,
-                  },
-                },
-              ],
-            },
-            NavLink: {
-                  url:validNavLink,
-            },
-            Logo:{
-              files: [
-                {
-                  name: 'LogoImage',
-                  type: 'external',
-                  external: {
-                    url: image,
-                  },
-                },
-              ],
-            }
-          
-          },
-        })
-      
-        const newPageId = response.id;
-        const masterTableId = process.env.NOTION_DATABASE_ID;
-        const relationResponse=await notion.pages.update({
-          page_id:masterTableId,
-          properties:{
-            NavigationId:{
-              relation:[
-                {
-                  id:newPageId
-                }
-              ]
-            }
-          }
-        })
-        
-        res.send({massage:"Record created successfully",response:{response,relationResponse}})
-      }
-  }
-  catch(e){
-    console.log(e);
-  }
-})
 
   app.post('/FooterNewsLatterInsert/:id',async(req,res)=>{
     try{
